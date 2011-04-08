@@ -82,12 +82,16 @@ class VarnishAdminSocket(object):
     
   def send(self, cmd):
     """Sends a command to the socket"""
+    if not self.conn:
+      raise VarnishAdminSocketError('Your are not connected')
+      return False
+    
     self.conn.send(cmd + "\n")
     return self.read()
   
   def read(self):
     """Returns the socket information in a hash of code, response"""
-    data = self.conn.recv(1024)
+    data = self.conn.recv(4096)
     (return_string,response) = string.split(data, "\n", 1)
     matches = re.compile('^(\d{3}) (\d+)').findall(return_string)
     code = int(matches[0][0])
