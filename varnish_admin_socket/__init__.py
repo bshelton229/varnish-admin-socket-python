@@ -77,6 +77,11 @@ class VarnishAdminSocket(object):
     code = int(matches[0][0])
     return { 'code': code, 'response': response }
 
+  def quit(self):
+    """Graceful quit"""
+    self.send('quit')
+    return self.close()
+
   def close(self):
     """Close the socket connection"""
     if self.conn:
