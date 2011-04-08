@@ -38,10 +38,10 @@ class VarnishAdminSocket(object):
     
     # Make the connection
     self.conn.connect( (self.host, self.port) )
-    run = self.read()
+    (code, response) = self.read()
     
     # If we get code 107, we need to try to authenticate
-    if run['code'] == 107:
+    if code == 107:
       # Check to make sure we've defined a secret key
       if not self.secret:
         self.close()
@@ -57,8 +57,8 @@ class VarnishAdminSocket(object):
         self.close()
         return False
 
-      check_auth = self.send("auth " + c)
-      if check_auth['code'] != 200:
+      (check_code, check_response) = self.send("auth " + c)
+      if check_code != 200:
         print "Bad authentication"
         return False
         self.close()
@@ -68,20 +68,20 @@ class VarnishAdminSocket(object):
   # Alias for the stats command
   def stats(self):
     """Return stats"""
-    run = self.send('stats')
-    return run['response']
+    (code, response) = self.send('stats')
+    return response
     
   # Alias for the purge command
   def purge(self, expr):
     """Send a purge command to Varnish"""
-    run = self.send("purge %s" % expr)
-    return run['code']
+    (code, response) = self.send("purge %s" % expr)
+    return code
       
   # Alias for the purge.url command
   def purge_url(self,path):
     """Send a purge command to Varnish"""
-    run = self.send("purge.url %s" % path)
-    return run['code']
+    (code, response) = self.send("purge.url %s" % path)
+    return code
     
   # Send a command to the socket
   def send(self, cmd):
@@ -101,9 +101,16 @@ class VarnishAdminSocket(object):
     (return_string,response) = string.split(data, "\n", 1)
     # Match the return code and length
     matches = re.compile('^(\d{3}) (\d+)').findall(return_string)
-    # TODO: Actually check that we have matches, and if not raise an exception
-    code = int(matches[0][0])
-    return { 'code': code, 'response': response }
+
+    # Check to see we got a valid response
+    if len(matches):
+      # Pull code from the search and make it an integer
+      code = int(matches[0][0])
+      return [code, response]
+    else:
+      raise VarnishAdminSocketError('Invalid socket response')
+      self.close()
+      return False
 
   # Returns boolean for self.conn
   def connected(self):
