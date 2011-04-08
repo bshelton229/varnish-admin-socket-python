@@ -4,6 +4,7 @@ Simple Python Varnish socket interface.
 import socket, sys, re, string
 
 # Hashlib is necessary to use Secret keys for authentication
+# There is an installable module for python 2.3 and 2.4 (I'm talking to you RHEL5)
 try:
   import hashlib
   hashlib_loaded = True
@@ -13,16 +14,15 @@ except ImportError:
 __version__ = '0.1'
 
 class VarnishAdminSocket(object):
-  
+  """Varnish Adminiistration Socket Library"""
   def __init__(self):
-    """
-    Initialise the Class, default some variables
-    """
+    """Initialise the Class, default some variables"""
     self.host = '127.0.0.1'
     self.port = 6082
     self.secret = False
     self.conn = False
 
+  # Connect to the socket and attempt authentication if necessary
   def connect(self):
     """Make the socket connection"""
     self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,21 +65,25 @@ class VarnishAdminSocket(object):
     else:
       return True
     
+  # Alias for the stats command
   def stats(self):
     """Return stats"""
     run = self.send('stats')
     return run['response']
     
+  # Alias for the purge command
   def purge(self, expr):
     """Send a purge command to Varnish"""
     run = self.send("purge %s" % expr)
     return run['code']
       
+  # Alias for the purge.url command
   def purge_url(self,path):
     """Send a purge command to Varnish"""
     run = self.send("purge.url %s" % path)
     return run['code']
     
+  # Send a command to the socket
   def send(self, cmd):
     """Sends a command to the socket"""
     if not self.conn:
@@ -89,19 +93,25 @@ class VarnishAdminSocket(object):
     self.conn.send(cmd + "\n")
     return self.read()
   
+  # Read from the socket
   def read(self):
     """Returns the socket information in a hash of code, response"""
     data = self.conn.recv(4096)
+    # Split off the first line, it should contain the return code and length
     (return_string,response) = string.split(data, "\n", 1)
+    # Match the return code and length
     matches = re.compile('^(\d{3}) (\d+)').findall(return_string)
+    # TODO: Actually check that we have matches, and if not raise an exception
     code = int(matches[0][0])
     return { 'code': code, 'response': response }
 
+  # A more graceful quit, send the quit command first, then close the socket
   def quit(self):
     """Graceful quit"""
     self.send('quit')
     return self.close()
 
+  # Close the socket
   def close(self):
     """Close the socket connection"""
     if self.conn:
@@ -109,7 +119,9 @@ class VarnishAdminSocket(object):
     self.conn = False
     return True
     
+# Our Exception class
 class VarnishAdminSocketError(Exception):
+  """VarnishAdminSocket Exception class"""
   def __init__(self, value):
     self.value = value
   def __str__(self):
