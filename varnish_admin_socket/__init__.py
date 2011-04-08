@@ -105,6 +105,14 @@ class VarnishAdminSocket(object):
     code = int(matches[0][0])
     return { 'code': code, 'response': response }
 
+  # Returns boolean for self.conn
+  def connected(self):
+    """Return connection status"""
+    if self.conn:
+      return True
+    else:
+      return False
+
   # A more graceful quit, send the quit command first, then close the socket
   def quit(self):
     """Graceful quit"""
