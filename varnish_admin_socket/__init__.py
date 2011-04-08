@@ -26,6 +26,17 @@ class VarnishAdminSocket(object):
   def connect(self):
     """Make the socket connection"""
     self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Enforce integer for the port
+    try:
+      self.port = int(self.port)
+    except ValueError:
+      # Port couldn't be made an integer
+      self.close()
+      raise VarnishAdminSocketError('Port could not be made an integer')
+      return False
+    
+    # Make the connection
     self.conn.connect( (self.host, self.port) )
     run = self.read()
     
@@ -59,6 +70,11 @@ class VarnishAdminSocket(object):
     run = self.send('stats')
     return run['response']
     
+  def purge(self, expr):
+    """Send a purge command to Varnish"""
+    run = self.send("purge %s" % expr)
+    return run['code']
+      
   def purge_url(self,path):
     """Send a purge command to Varnish"""
     run = self.send("purge.url %s" % path)
@@ -88,3 +104,9 @@ class VarnishAdminSocket(object):
       self.conn.close()
     self.conn = False
     return True
+    
+class VarnishAdminSocketError(Exception):
+  def __init__(self, value):
+    self.value = value
+  def __str__(self):
+    return repr(self.value)
