@@ -2,7 +2,7 @@ from distutils.core import setup
 from varnish_admin_socket import __version__
 
 setup(
-    name='varnish-admin-socket-python',
+    name='varnish-admin-socket',
     version=__version__,
     description='Simple Python Varnish socket interface',
     author='Bryan Shelton',

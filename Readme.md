@@ -18,7 +18,7 @@ Simple python library to administer Varnish. The library can use shared secret a
     
     # Purge Commands
     varnish.purge_url('^/cached')
-    varnish.purge('req.http.host ~ example.com && req.url ^/cached$')
+    varnish.purge('req.http.host ~ example.com && req.url ~ ^/cached$')
 
     # Run Stats
     print varnish.stats()
