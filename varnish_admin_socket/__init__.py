@@ -25,8 +25,8 @@ class VarnishAdminSocket(object):
     self.secret = kwargs.pop('secret', False)
 
     # If auto_connect = True, attempt to connect on instantiation
-    auto_connect = kwargs.pop('auto_connect', False)
-    if auto_connect:
+    self.auto_connect = kwargs.pop('auto_connect', False)
+    if self.auto_connect:
       self.connect()
     else:
       self.conn = False
@@ -102,7 +102,10 @@ class VarnishAdminSocket(object):
       return False
     
     self.conn.send(cmd + "\n")
-    return self.read()
+    read = self.read()
+    if self.auto_connect and not re.match("auth|quit", cmd):
+      self.quit()
+    return read
   
   # Read from the socket
   def read(self):
