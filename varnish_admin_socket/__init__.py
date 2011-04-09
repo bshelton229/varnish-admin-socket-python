@@ -58,7 +58,7 @@ class VarnishAdminSocket(object):
         self.close()
         return False
       
-      challenge = string.split(run['response'], "\n", 1)[0]
+      challenge = string.split(response, "\n", 1)[0]
       secret = self.secret
 
       # Try for hashlib
