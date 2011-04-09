@@ -32,9 +32,11 @@ class VarnishAdminSocket(object):
       self.conn = False
 
   # Connect to the socket and attempt authentication if necessary
-  def connect(self):
+  def connect(self, timeout=5):
     """Make the socket connection"""
     self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.conn.setblocking(1)
+    self.conn.settimeout(timeout)
 
     # Enforce integer for the port
     try:
