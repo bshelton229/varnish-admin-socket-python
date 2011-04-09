@@ -11,16 +11,25 @@ try:
 except ImportError:
   hashlib_loaded = False
 
+# varnish-admin-socket-python version
 __version__ = '0.1'
 
 class VarnishAdminSocket(object):
   """Varnish Adminiistration Socket Library"""
-  def __init__(self):
+  def __init__(self, **kwargs):
     """Initialise the Class, default some variables"""
-    self.host = '127.0.0.1'
-    self.port = 6082
-    self.secret = False
-    self.conn = False
+    
+    # Check kwargs for overrides
+    self.host = kwargs.pop('host', '127.0.0.1')
+    self.port = kwargs.pop('port', 6082)
+    self.secret = kwargs.pop('secret', False)
+
+    # If auto_connect = True, attempt to connect on instantiation
+    auto_connect = kwargs.pop('auto_connect', False)
+    if auto_connect:
+      self.connect()
+    else:
+      self.conn = False
 
   # Connect to the socket and attempt authentication if necessary
   def connect(self):
