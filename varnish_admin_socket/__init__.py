@@ -14,6 +14,8 @@ except ImportError:
 # varnish-admin-socket-python version
 __version__ = '0.1'
 
+## Varnish Admin Socket for executing varnishadm CLI commands
+## Tested on varnish 2.1.5
 class VarnishAdminSocket(object):
   """Varnish Adminiistration Socket Library"""
   def __init__(self, **kwargs):
@@ -62,6 +64,7 @@ class VarnishAdminSocket(object):
     if code == 107:
       # Check to make sure we've defined a secret key
       if not self.secret:
+        raise Exception("VarnishAdminSocket: Authentication is required, please set the secret key.")
         self.close()
         return False
       
@@ -77,7 +80,7 @@ class VarnishAdminSocket(object):
 
       (check_code, check_response) = self.send("auth " + c)
       if check_code != 200:
-        print "Bad authentication"
+        raise Exception("VarnishAdminSocket: Bad Authentication")
         return False
         self.close()
     else:
@@ -132,7 +135,7 @@ class VarnishAdminSocket(object):
   def stop(self):
     """Send the stop command"""
     (code, response) = self.send("stop")
-    return code  
+    return code
     
   # Run any varnish command
   # Returns the response and code
@@ -176,7 +179,7 @@ class VarnishAdminSocket(object):
     else:
       return False
 
-  # A more graceful quit, send the quit command first, then close the socket
+  # A more graceful quit, send the quit command first, then closes the socket
   def quit(self):
     """Graceful quit"""
     self.send('quit')
@@ -185,7 +188,7 @@ class VarnishAdminSocket(object):
   # Close the socket
   def close(self):
     """Close the socket connection"""
-    if self.conn:
+    if self.connected():
       self.conn.close()
     self.conn = False
     return True
