@@ -4,7 +4,7 @@ Simple Python Varnish socket interface.
 import socket, sys, re, string
 
 # Hashlib is necessary to use Secret keys for authentication
-# There is an installable module for python 2.3 and 2.4 (I'm talking to you RHEL5)
+# There is an installable hashlib module for python 2.3 and 2.4 (I'm talking to you RHEL5)
 try:
   import hashlib
   hashlib_loaded = True
@@ -34,9 +34,10 @@ class VarnishAdminSocket(object):
   # Connect to the socket and attempt authentication if necessary
   def connect(self, timeout=5):
     """Make the socket connection"""
-    self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.conn.setblocking(1)
-    self.conn.settimeout(timeout)
+    # Connect to the socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setblocking(1)
+    sock.settimeout(timeout)
 
     # Enforce integer for the port
     try:
@@ -48,9 +49,15 @@ class VarnishAdminSocket(object):
       return False
     
     # Make the connection
-    self.conn.connect( (self.host, self.port) )
+    sock.connect( (self.host, self.port) )
+
+    # Store the socket makefile
+    self.conn = sock.makefile()
+
+    # Close the socket object now that we have makefile
+    sock.close()
     (code, response) = self.read()
-    
+
     # If we get code 107, we need to try to authenticate
     if code == 107:
       # Check to make sure we've defined a secret key
@@ -82,6 +89,19 @@ class VarnishAdminSocket(object):
     (code, response) = self.send('stats')
     return response
     
+  # Runs the status command and returns true or false
+  def status(self):
+    """Runs the status command and returns true or false"""
+    (code, response) = self.send('status')
+    s = re.search('Child in state (\w+)', response)
+    if s:
+      if(s.group(1) == "running"):
+        return True
+      else:
+        return False
+    else:
+      return False
+    
   # Alias for the purge command
   def purge(self, expr):
     """Send a purge command to Varnish"""
@@ -101,7 +121,9 @@ class VarnishAdminSocket(object):
       raise VarnishAdminSocketError('Your are not connected')
       return False
     
-    self.conn.send(cmd + "\n")
+    self.conn.write("%s\n" % cmd)
+    self.conn.flush()
+    
     read = self.read()
     if self.auto_connect and not re.match("auth|quit", cmd):
       self.quit()
@@ -110,21 +132,27 @@ class VarnishAdminSocket(object):
   # Read from the socket
   def read(self):
     """Returns the socket information in a hash of code, response"""
-    data = self.conn.recv(4096)
-    # Split off the first line, it should contain the return code and length
-    (return_string,response) = string.split(data, "\n", 1)
+    (code, blen) = self.conn.readline().split()
+    
+    msg = self.conn.read(int(blen)+1)
+    #self.conn.flush()
+    
+    return [int(code), msg.rstrip()]
+
+    #matches = re.compile('^(\d{3}) (\d+)').findall(code)
+    
     # Match the return code and length
-    matches = re.compile('^(\d{3}) (\d+)').findall(return_string)
+    #matches = re.compile('^(\d{3}) (\d+)').findall(return_string)
 
     # Check to see we got a valid response
-    if len(matches):
-      # Pull code from the search and make it an integer
-      code = int(matches[0][0])
-      return [code, response]
-    else:
-      raise VarnishAdminSocketError('Invalid socket response')
-      self.close()
-      return False
+    # if len(matches):
+    #   # Pull code from the search and make it an integer
+    #   code = int(matches[0][0])
+    #   return [code, response]
+    # else:
+    #   raise VarnishAdminSocketError('Invalid socket response')
+    #   self.close()
+    #   return False
 
   # Returns boolean for self.conn
   def connected(self):
