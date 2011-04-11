@@ -45,7 +45,7 @@ class VarnishAdminSocket(object):
     except ValueError:
       # Port couldn't be made an integer
       self.close()
-      raise VarnishAdminSocketError('Port could not be made an integer')
+      raise Exception('VarnishAdminSocket: Port could not be made an integer')
       return False
     
     # Make the connection
@@ -102,6 +102,8 @@ class VarnishAdminSocket(object):
     else:
       return False
     
+  ## Commands ##
+  
   # Alias for the purge command
   def purge(self, expr):
     """Send a purge command to Varnish"""
@@ -113,7 +115,35 @@ class VarnishAdminSocket(object):
     """Send a purge command to Varnish"""
     (code, response) = self.send("purge.url %s" % path)
     return code
+
+  # Runs the purge.list command
+  def purge_list(self):
+    """Runs the purge.list command"""
+    (code, response) = self.send("purge.list")
+    return response
+  
+  # Send the start command
+  def start(self):
+    """Send the start command"""
+    (code, response) = self.send("start")
+    return code
     
+  # Send the stop command
+  def stop(self):
+    """Send the stop command"""
+    (code, response) = self.send("stop")
+    return code  
+    
+  # Run any varnish command
+  # Returns the response and code
+  def command(self, cmd):
+    (code, response) = self.send(cmd)
+    if(code == 200):
+      return response
+    else:
+      # Raise an exception
+      return False
+
   # Send a command to the socket
   def send(self, cmd):
     """Sends a command to the socket"""
@@ -132,27 +162,11 @@ class VarnishAdminSocket(object):
   # Read from the socket
   def read(self):
     """Returns the socket information in a hash of code, response"""
-    (code, blen) = self.conn.readline().split()
-    
+    # TODO: Raise exceptions here if we can't read
+    (code, blen) = self.conn.readline().split()    
     msg = self.conn.read(int(blen)+1)
-    #self.conn.flush()
     
     return [int(code), msg.rstrip()]
-
-    #matches = re.compile('^(\d{3}) (\d+)').findall(code)
-    
-    # Match the return code and length
-    #matches = re.compile('^(\d{3}) (\d+)').findall(return_string)
-
-    # Check to see we got a valid response
-    # if len(matches):
-    #   # Pull code from the search and make it an integer
-    #   code = int(matches[0][0])
-    #   return [code, response]
-    # else:
-    #   raise VarnishAdminSocketError('Invalid socket response')
-    #   self.close()
-    #   return False
 
   # Returns boolean for self.conn
   def connected(self):
@@ -175,11 +189,3 @@ class VarnishAdminSocket(object):
       self.conn.close()
     self.conn = False
     return True
-    
-# Our Exception class
-class VarnishAdminSocketError(Exception):
-  """VarnishAdminSocket Exception class"""
-  def __init__(self, value):
-    self.value = value
-  def __str__(self):
-    return repr(self.value)
