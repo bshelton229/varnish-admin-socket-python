@@ -73,7 +73,7 @@ class VarnishAdminSocket(object):
 
       # Try for hashlib
       try:
-        c = hashlib.sha256("%s\n%s\n%s\n" % (challenge, secret, challenge)).hexdigest()
+        c = hashlib.sha256("%s\n%s%s\n" % (challenge, secret, challenge)).hexdigest()
       except:
         self.close()
         return False
