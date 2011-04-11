@@ -10,6 +10,7 @@ setup(
     version=__version__,
     description='Simple Python Varnish socket interface',
     long_description=read('README.rst'),
+    license="MIT",
     author='Bryan Shelton',
     author_email='bryan@sheltonplace.com',
     url='http://github.com/bshelton229/varnish-admin-socket-python',
