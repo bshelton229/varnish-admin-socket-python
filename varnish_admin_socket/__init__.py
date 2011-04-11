@@ -142,7 +142,7 @@ class VarnishAdminSocket(object):
   def command(self, cmd):
     (code, response) = self.send(cmd)
     if(code == 200):
-      return response
+      return [code, response]
     else:
       # Raise an exception
       return False
