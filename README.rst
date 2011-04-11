@@ -31,3 +31,16 @@ Usage::
   
   # Quit and close the connection
   varnish.quit()
+  
+More Usage::
+
+  from varnish_admin_socket import VarnishAdminSocket
+  # You may also set server, port, host, and secret on instantiation.
+  varnish = VarnishAdminSocket(host='varnish.domain.com',secret='123\n')
+  varnish.connect()
+  print varnish.stats()
+  varnish.quit()
+  
+  # Setting auto_connect will automatically connect(), will run the first command (besides auth), and will then .quit()
+  
+  VarnishAdminSocket(auto_connect=True,secret='123').purge_url('.')
