@@ -17,7 +17,7 @@ __version__ = '0.1'
 ## Varnish Admin Socket for executing varnishadm CLI commands
 ## Tested on varnish 2.1.5
 class VarnishAdminSocket(object):
-  """Varnish Adminiistration Socket Library"""
+  """Varnish Administration Socket Library"""
   def __init__(self, **kwargs):
     """Initialise the Class, default some variables"""
     
