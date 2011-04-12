@@ -12,7 +12,7 @@ except ImportError:
     hashlib_loaded = False
 
 # varnish-admin-socket-python version
-__version__ = '0.1'
+__version__ = '0.2'
 
 ## Varnish Admin Socket for executing varnishadm CLI commands
 ## Tested on varnish 2.1.5
@@ -25,11 +25,12 @@ class VarnishAdminSocket(object):
         self.host = kwargs.pop('host', '127.0.0.1')
         self.port = kwargs.pop('port', 6082)
         self.secret = kwargs.pop('secret', False)
+        self.timeout = kwargs.pop('timeout', 5)
 
         # If auto_connect = True, attempt to connect on instantiation
         self.auto_connect = kwargs.pop('auto_connect', False)
         if self.auto_connect:
-            self.connect()
+            self.connect(self.timeout)
         else:
             self.conn = False
 
