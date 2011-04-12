@@ -140,6 +140,7 @@ class VarnishAdminSocket(object):
   # Run any varnish command
   # Returns the response and code
   def command(self, cmd, ok=200):
+    ok = int(ok)
     (code, response) = self.send(cmd)
     if(code == ok):
       return response
