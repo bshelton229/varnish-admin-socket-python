@@ -87,6 +87,7 @@ class VarnishAdminSocket(object):
       return True
     
   # Alias for the stats command
+  # Returns the response string
   def stats(self):
     """Return stats"""
     (code, response) = self.send('stats')
@@ -108,38 +109,52 @@ class VarnishAdminSocket(object):
   ## Commands ##
   
   # Alias for the purge command
+  # Returns the code
   def purge(self, expr):
     """Send a purge command to Varnish"""
     (code, response) = self.send("purge %s" % expr)
     return code
       
   # Alias for the purge.url command
+  # Returns the code
   def purge_url(self,path):
     """Send a purge command to Varnish"""
     (code, response) = self.send("purge.url %s" % path)
     return code
 
   # Runs the purge.list command
+  # Returns the response
   def purge_list(self):
     """Runs the purge.list command"""
     (code, response) = self.send("purge.list")
     return response
   
   # Send the start command
+  # Returns true or false
   def start(self):
     """Send the start command"""
     (code, response) = self.send("start")
-    return code
+    if code == 200:
+      return True
+    else:
+      return False
     
   # Send the stop command
+  # Returns true or false
   def stop(self):
     """Send the stop command"""
     (code, response) = self.send("stop")
-    return code
+    if code == 200:
+      return True
+    else:
+      return False
     
   # Run any varnish command
   # Returns the response and code
+  # ok = the code varnish needs to return for this function to return response,
+  # otherweise the function returns False
   def command(self, cmd, ok=200):
+    """Runs any command against the varnish socket and returns the response"""
     ok = int(ok)
     (code, response) = self.send(cmd)
     if(code == ok):
