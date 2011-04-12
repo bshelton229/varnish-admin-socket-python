@@ -152,7 +152,7 @@ class VarnishAdminSocket(object):
   def send(self, cmd):
     """Sends a command to the socket"""
     if not self.conn:
-      raise VarnishAdminSocketError('Your are not connected')
+      raise Exception('Your are not connected')
       return False
     
     self.conn.write("%s\n" % cmd)
