@@ -181,7 +181,7 @@ class VarnishAdminSocket(object):
   
     # Read from the socket
     def read(self):
-        """Returns the socket information in a hash of code, response"""
+        """Returns the socket information"""
         # TODO: Raise exceptions here if we can't read
         (code, blen) = self.conn.readline().split()    
         msg = self.conn.read(int(blen)+1)
