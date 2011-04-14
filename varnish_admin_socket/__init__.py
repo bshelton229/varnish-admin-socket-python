@@ -3,7 +3,7 @@ Simple Python Varnish socket interface.
 """
 import socket, sys, re, string
 
-# Hashlib is necessary to use Secret keys for authentication
+# Hashlib is necessary to generate the sha256 hash for secret key authentication.
 # There is an installable hashlib module for python 2.3 and 2.4 (I'm talking to you RHEL5)
 try:
     import hashlib
@@ -11,8 +11,8 @@ try:
 except ImportError:
     hashlib_loaded = False
 
-# varnish-admin-socket-python version
-__version__ = '0.2'
+# varnish-admin-socket version
+__version__ = '0.1.5'
 
 ## Varnish Admin Socket for executing varnishadm CLI commands
 ## Tested on varnish 2.1.5
@@ -20,12 +20,13 @@ class VarnishAdminSocket(object):
     """Varnish Administration Socket Library"""
     def __init__(self, **kwargs):
         """Initialise the Class, default some variables"""
-    
+        
         # Check kwargs for overrides
         self.host = kwargs.pop('host', '127.0.0.1')
         self.port = kwargs.pop('port', 6082)
         self.secret = kwargs.pop('secret', False)
         self.timeout = kwargs.pop('timeout', 5)
+        self.compat = kwargs.pop('compat', False)
 
         # If auto_connect = True, attempt to connect on instantiation
         self.auto_connect = kwargs.pop('auto_connect', False)
@@ -37,6 +38,11 @@ class VarnishAdminSocket(object):
     # Connect to the socket and attempt authentication if necessary
     def connect(self, timeout=5):
         """Make the socket connection"""
+
+        # Determine if we were able to import hashlib. We can't do secret key authentication
+        # without it.
+        global hashlib_loaded
+        
         # Connect to the socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(1)
@@ -59,31 +65,41 @@ class VarnishAdminSocket(object):
 
         # Close the socket object now that we have makefile
         sock.close()
+
+        # Compat mode is for Varnish 2.0.6
+        # There wont be a banner with Varnish 2.0.6
+        # just return True once we have the socket connection
+        if self.compat:
+            return True
+            
+        # Read the banner
         (code, response) = self.read()
 
         # If we get code 107, we need to try to authenticate
         if code == 107:
+            # Hashlib needs to be loaded for secret key authentication
+            # If it's not loaded, raise an error
+            if not hashlib_loaded:
+                e = "VarnishAdminSocket: The hashlib module must be available for secret key authentication"
+                raise Exception(e)
+                
             # Check to make sure we've defined a secret key
             if not self.secret:
                 raise Exception("VarnishAdminSocket: Authentication is required, please set the secret key.")
                 self.close()
                 return False
 
-        challenge = string.split(response, "\n", 1)[0]
-        secret = self.secret
+            challenge = string.split(response, "\n", 1)[0]
+            secret = self.secret
 
-        # Try for hashlib
-        try:
-            c = hashlib.sha256("%s\n%s%s\n" % (challenge, secret, challenge)).hexdigest()
-        except:
-            self.close()
-            return False
-        
-        (check_code, check_response) = self.send("auth " + c)
-        if check_code != 200:
-            raise Exception("VarnishAdminSocket: Bad Authentication")
-            return False
-            self.close()
+            # Try for hashlib
+            auth_response = hashlib.sha256("%s\n%s%s\n" % (challenge, secret, challenge)).hexdigest()
+
+            (check_code, check_response) = self.send("auth " + auth_response)
+            if check_code != 200:
+                raise Exception("VarnishAdminSocket: Bad Authentication")
+                return False
+                self.close()
         else:
             return True
     

@@ -3,7 +3,9 @@
 Varnish Admin Socket
 =====================
 
-A simple python library to administer Varnish over the administration socket. The library can use shared secret authentication. I have only tested it against Varnish 2.1.5.
+A simple python library to administer Varnish over the administration socket. The library can use shared secret authentication. Almost all testing has been done against Varnish 2.1.5.
+
+Note: To use the library with Varnish 2.0.6, set compat = True (Experimental)
 
 This was heavily inspired by Tim Whitlock's wonderful PHP library (http://github.com/timwhitlock/php-varnish).
 
@@ -18,6 +20,8 @@ Usage::
   varnish.port = 6082
   # You probably want to add a newline, this is usually read from a file.
   varnish.secret = "123\n"
+  # To use with Varnish 2.0.6 compat = True must be set
+  varnish.compat = True
 
   # Connect to Varnish
   varnish.connect()

@@ -1,0 +1,3 @@
+0.1.5 (2011-04-13)
+------------------
+* Added compat support for Varnish 2.0.6 (set compat=True)
