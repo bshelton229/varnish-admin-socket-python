@@ -12,7 +12,7 @@ except ImportError:
     hashlib_loaded = False
 
 # varnish-admin-socket version
-__version__ = '0.1.5'
+__version__ = '0.1.1'
 
 ## Varnish Admin Socket for executing varnishadm CLI commands
 ## Tested on varnish 2.1.5
