@@ -1,3 +1,4 @@
-0.1.5 (2011-04-13)
+0.1.5 (2011-04-21)
 ------------------
 * Added compat support for Varnish 2.0.6 (set compat=True)
+* The secret key can be loaded form a file by setting secret_file='/path/to/secretfile.txt'

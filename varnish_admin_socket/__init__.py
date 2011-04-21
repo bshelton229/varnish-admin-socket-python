@@ -27,26 +27,35 @@ class VarnishAdminSocket(object):
         self.secret = kwargs.pop('secret', False)
         self.timeout = kwargs.pop('timeout', 5)
         self.compat = kwargs.pop('compat', False)
+        self.secret_file = kwargs.pop('secret_file', False)
 
         # If auto_connect = True, attempt to connect on instantiation
         self.auto_connect = kwargs.pop('auto_connect', False)
         if self.auto_connect:
-            self.connect(self.timeout)
+            self.connect()
         else:
             self.conn = False
 
     # Connect to the socket and attempt authentication if necessary
-    def connect(self, timeout=5):
+    def connect(self):
         """Make the socket connection"""
 
         # Determine if we were able to import hashlib. We can't do secret key authentication
         # without it.
         global hashlib_loaded
         
+        # Try to use self.timeout, if we can't make it into an integer
+        # default to 5
+        try:
+            local_timeout = int(self.timeout)
+        except ValueError:
+            local_timeout = 5
+            
+        
         # Connect to the socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(1)
-        sock.settimeout(timeout)
+        sock.settimeout(local_timeout)
 
         # Enforce integer for the port
         try:
@@ -83,6 +92,10 @@ class VarnishAdminSocket(object):
                 e = "VarnishAdminSocket: The hashlib module must be available for secret key authentication"
                 raise Exception(e)
                 
+            # Run get secret to try to load
+            # the secret from a file if secret_file is set
+            self.__get_secret()
+            
             # Check to make sure we've defined a secret key
             if not self.secret:
                 raise Exception("VarnishAdminSocket: Authentication is required, please set the secret key.")
@@ -225,3 +238,19 @@ class VarnishAdminSocket(object):
             self.conn.close()
         self.conn = False
         return True
+
+    # If self.secret_file is set we'll try to load the file into self.secret
+    # If we can't load the file, or self.secret_file is not set, we return
+    # self.secret
+    def __get_secret(self):
+        # If a secret file is set, try to load it, and set the 
+        if self.secret_file:
+            try:
+                load = open(self.secret_file).read()
+                self.secret = load
+                return load
+            except:
+                return False
+
+        # Default to returning the contents of the secret var
+        return self.secret
