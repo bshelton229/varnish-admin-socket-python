@@ -20,6 +20,8 @@ Usage::
   varnish.port = 6082
   # You probably want to add a newline, this is usually read from a file.
   varnish.secret = "123\n"
+  # To load the secret key from a file set secret_file
+  varnish.secret_file = '/etc/varnish/secret.txt'
   # To use with Varnish 2.0.6 compat = True must be set
   varnish.compat = True
 
@@ -48,4 +50,4 @@ More Usage::
   # Setting auto_connect will automatically connect(), will run the first command (besides auth), 
   # and will then .quit()
   
-  VarnishAdminSocket(auto_connect=True,secret='123').purge_url('.')
+  VarnishAdminSocket(auto_connect=True,secret_file='/etc/varnish/secret.txt').purge_url('.')
