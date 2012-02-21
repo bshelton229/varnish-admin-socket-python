@@ -26,7 +26,6 @@ class VarnishAdminSocket(object):
         self.port = kwargs.pop('port', 6082)
         self.secret = kwargs.pop('secret', False)
         self.timeout = kwargs.pop('timeout', 5)
-        self.compat = kwargs.pop('compat', False)
         self.secret_file = kwargs.pop('secret_file', False)
 
         # If auto_connect = True, attempt to connect on instantiation
@@ -74,12 +73,6 @@ class VarnishAdminSocket(object):
 
         # Close the socket object now that we have makefile
         sock.close()
-
-        # Compat mode is for Varnish 2.0.6
-        # There wont be a banner with Varnish 2.0.6
-        # just return True once we have the socket connection
-        if self.compat:
-            return True
 
         # Read the banner
         (code, response) = self.read()
