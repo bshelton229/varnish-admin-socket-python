@@ -1,7 +1,7 @@
 """
 Simple Python Varnish socket interface.
 """
-import socket, sys, re, string
+import socket, re, string
 
 # Hashlib is necessary to generate the sha256 hash for secret key authentication.
 # There is an installable hashlib module for python 2.3 and 2.4 (I'm talking to you RHEL5)
@@ -12,15 +12,15 @@ except ImportError:
     hashlib_loaded = False
 
 # varnish-admin-socket version
-__version__ = '0.1.1'
+__version__ = '0.2.1'
 
 ## Varnish Admin Socket for executing varnishadm CLI commands
-## Tested on varnish 2.1.5
+## Tested on varnish 3.0.0
 class VarnishAdminSocket(object):
     """Varnish Administration Socket Library"""
     def __init__(self, **kwargs):
         """Initialise the Class, default some variables"""
-        
+
         # Check kwargs for overrides
         self.host = kwargs.pop('host', '127.0.0.1')
         self.port = kwargs.pop('port', 6082)
@@ -43,15 +43,15 @@ class VarnishAdminSocket(object):
         # Determine if we were able to import hashlib. We can't do secret key authentication
         # without it.
         global hashlib_loaded
-        
+
         # Try to use self.timeout, if we can't make it into an integer
         # default to 5
         try:
             local_timeout = int(self.timeout)
         except ValueError:
             local_timeout = 5
-            
-        
+
+
         # Connect to the socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(1)
@@ -65,7 +65,7 @@ class VarnishAdminSocket(object):
             self.close()
             raise Exception('VarnishAdminSocket: Port could not be made an integer')
             return False
-    
+
         # Make the connection
         sock.connect( (self.host, self.port) )
 
@@ -80,7 +80,7 @@ class VarnishAdminSocket(object):
         # just return True once we have the socket connection
         if self.compat:
             return True
-            
+
         # Read the banner
         (code, response) = self.read()
 
@@ -91,11 +91,11 @@ class VarnishAdminSocket(object):
             if not hashlib_loaded:
                 e = "VarnishAdminSocket: The hashlib module must be available for secret key authentication"
                 raise Exception(e)
-                
+
             # Run get secret to try to load
             # the secret from a file if secret_file is set
             self.__get_secret()
-            
+
             # Check to make sure we've defined a secret key
             if not self.secret:
                 raise Exception("VarnishAdminSocket: Authentication is required, please set the secret key.")
@@ -115,14 +115,7 @@ class VarnishAdminSocket(object):
                 self.close()
         else:
             return True
-    
-    # Alias for the stats command
-    # Returns the response string
-    def stats(self):
-        """Return stats"""
-        (code, response) = self.send('stats')
-        return response
-    
+
     # Runs the status command and returns true or false
     def status(self):
         """Runs the status command and returns true or false"""
@@ -135,30 +128,30 @@ class VarnishAdminSocket(object):
                 return False
         else:
             return False
-    
+
     ## Commands ##
 
-    # Alias for the purge command
+    # Alias for the ban command
     # Returns the code
-    def purge(self, expr):
-        """Send a purge command to Varnish"""
-        (code, response) = self.send("purge %s" % expr)
-        return code
-      
-    # Alias for the purge.url command
-    # Returns the code
-    def purge_url(self,path):
-        """Send a purge command to Varnish"""
-        (code, response) = self.send("purge.url %s" % path)
+    def ban(self, expr):
+        """Send a ban command to Varnish"""
+        (code, response) = self.send("ban %s" % expr)
         return code
 
-    # Runs the purge.list command
+    # Alias for the ban.url command
+    # Returns the code
+    def ban_url(self,path):
+        """Send a ban command to Varnish"""
+        (code, response) = self.send("ban.url %s" % path)
+        return code
+
+    # Runs the ban.list command
     # Returns the response
-    def purge_list(self):
-        """Runs the purge.list command"""
-        (code, response) = self.send("purge.list")
+    def ban_list(self):
+        """Runs the ban.list command"""
+        (code, response) = self.send("ban.list")
         return response
-  
+
     # Send the start command
     # Returns true or false
     def start(self):
@@ -168,7 +161,7 @@ class VarnishAdminSocket(object):
             return True
         else:
             return False
-    
+
     # Send the stop command
     # Returns true or false
     def stop(self):
@@ -178,7 +171,7 @@ class VarnishAdminSocket(object):
             return True
         else:
             return False
-    
+
     # Run any varnish command
     # Returns the response and code
     # ok = the code varnish needs to return for this function to return response,
@@ -207,12 +200,12 @@ class VarnishAdminSocket(object):
         if self.auto_connect and not re.match("auth|quit", cmd):
             self.quit()
         return read
-  
+
     # Read from the socket
     def read(self):
         """Returns the socket information"""
         # TODO: Raise exceptions here if we can't read
-        (code, blen) = self.conn.readline().split()    
+        (code, blen) = self.conn.readline().split()
         msg = self.conn.read(int(blen)+1)
 
         return [int(code), msg.rstrip()]
@@ -231,7 +224,7 @@ class VarnishAdminSocket(object):
         self.send('quit')
         return self.close()
 
-  # Close the socket
+    # Close the socket
     def close(self):
         """Close the socket connection"""
         if self.connected():
@@ -243,7 +236,7 @@ class VarnishAdminSocket(object):
     # If we can't load the file, or self.secret_file is not set, we return
     # self.secret
     def __get_secret(self):
-        # If a secret file is set, try to load it, and set the 
+        # If a secret file is set, try to load it, and set the
         if self.secret_file:
             try:
                 load = open(self.secret_file).read()
