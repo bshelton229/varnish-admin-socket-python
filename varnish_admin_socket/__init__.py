@@ -50,7 +50,6 @@ class VarnishAdminSocket(object):
         except ValueError:
             local_timeout = 5
 
-
         # Connect to the socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(1)
